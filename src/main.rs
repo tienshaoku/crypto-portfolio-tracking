@@ -9,8 +9,11 @@ use thousands::Separable;
 
 abigen!(
     IERC20,
-    r#"[function balanceOf(address account) public view virtual returns (uint256)
-    function decimals() public view virtual returns (uint8)]"#
+    r#"[
+    function balanceOf(address account) public view virtual returns (uint256)
+    function decimals() public view virtual returns (uint8)
+    function symbol() public view virtual returns (string)
+    ]"#
 );
 
 #[tokio::main]
@@ -36,10 +39,11 @@ async fn main() -> eyre::Result<()> {
         let balance: U256 = erc20.balance_of(user).call().await?;
 
         let decimals = erc20.decimals().call().await? as i32;
+        let symbol: String = erc20.symbol().call().await?;
 
         println!(
-            "the {}(erc20) balance_of {}(user): {:?}",
-            erc20_addr,
+            "{} balance_of {}(user): {:?}",
+            symbol,
             user,
             format_units(balance, decimals)
                 .unwrap()
