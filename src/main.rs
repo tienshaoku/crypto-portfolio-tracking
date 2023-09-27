@@ -7,6 +7,7 @@ use ethers::{
 use std::sync::Arc;
 use std::{collections::HashMap, error::Error};
 use thousands::Separable;
+mod constant;
 
 abigen!(
     IERC20,
@@ -19,31 +20,16 @@ abigen!(
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
-    let tracked_addresses_raw: Vec<&str> = vec![
-        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-        "0x57891966931Eb4Bb6FB81430E6cE0A03AAbDe063",
-    ];
-    let tracked_addresses: Vec<Address> = format_raw_addresses(&tracked_addresses_raw).unwrap();
+    let tracked_addresses: Vec<Address> = format_raw_addresses(&constant::ADDRESS).unwrap();
 
-    let mut token_map: HashMap<String, Vec<&str>> = HashMap::new();
+    let mut token_map: HashMap<String, &[&'static str]> = HashMap::new();
     token_map.insert(
-        String::from("https://eth.llamarpc.com"),
-        vec![
-            "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
-            "0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
-            "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", // WBTC
-            "0xbC396689893D065F41bc2C6EcbeE5e0085233447", // PERP
-        ],
+        String::from(constant::ETH_RPC),
+        &constant::ETH_ERC20
     );
-
     token_map.insert(
-        String::from("https://mainnet.optimism.io"),
-        vec![
-            "0x7F5c764cBc14f9669B88837ca1490cCa17c31607", // USDC
-            "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58", // USDT
-            "0x68f180fcCe6836688e9084f035309E29Bf0A2095", // WBTC
-            "0x9e1028F5F1D5eDE59748FFceE5532509976840E0", // PERP
-        ],
+        String::from(constant::OP_RPC),
+        &constant::OP_ERC20
     );
 
     for tracked_addr in tracked_addresses {
@@ -79,7 +65,7 @@ async fn main() -> eyre::Result<()> {
     Ok(())
 }
 
-fn format_raw_addresses(raw_addresses: &Vec<&str>) -> Result<Vec<Address>, Box<dyn Error>> {
+fn format_raw_addresses(raw_addresses: &[&'static str]) -> Result<Vec<Address>, Box<dyn Error>> {
     let mut addresses: Vec<Address> = Vec::new();
     for addr in raw_addresses {
         addresses.push(addr.parse()?)
