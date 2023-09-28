@@ -22,22 +22,17 @@ abigen!(
 async fn main() -> eyre::Result<()> {
     let tracked_addresses: Vec<Address> = format_raw_addresses(&constant::ADDRESS).unwrap();
 
-    let mut token_map: HashMap<String, &[&'static str]> = HashMap::new();
-    token_map.insert(
-        String::from(constant::ETH_RPC),
-        &constant::ETH_ERC20
-    );
-    token_map.insert(
-        String::from(constant::OP_RPC),
-        &constant::OP_ERC20
-    );
+    let mut token_map: HashMap<&str, &[&'static str]> = HashMap::new();
+    token_map.insert(constant::ETH_RPC, &constant::ETH_ERC20);
+    token_map.insert(constant::OP_RPC, &constant::OP_ERC20);
 
     for tracked_addr in tracked_addresses {
         println!("{:?}", tracked_addr);
 
         for (rpc_url, erc20_addresses_raw) in &token_map {
             println!("rpc_url: {}", rpc_url);
-            let provider = Arc::new(Provider::try_from(rpc_url)?);
+            // dereference once for the pointer on token_map
+            let provider = Arc::new(Provider::try_from(*rpc_url)?);
 
             let erc20_addresses: Vec<Address> = format_raw_addresses(erc20_addresses_raw).unwrap();
 
