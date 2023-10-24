@@ -3,6 +3,7 @@ use ethers::{
     providers::{Middleware, Provider},
     types::{Address, U256},
     utils::format_units,
+    utils::Units::Ether
 };
 use std::sync::Arc;
 use std::{collections::HashMap, error::Error};
@@ -36,7 +37,7 @@ async fn main() -> eyre::Result<()> {
 
             println!(
                 "ETH: {}",
-                format_units(provider.get_balance(wallet, None).await.unwrap(), 18)
+                format_units(provider.get_balance(wallet, None).await.unwrap(), Ether.as_num())
                     .unwrap()
                     .separate_with_commas()
             );
