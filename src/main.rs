@@ -1,6 +1,6 @@
 use ethers::{
     prelude::abigen,
-    providers::Provider,
+    providers::{Middleware, Provider},
     types::{Address, U256},
     utils::format_units,
 };
@@ -34,6 +34,13 @@ async fn main() -> eyre::Result<()> {
             // dereference once for the pointer on rpc_token_map
             let provider = Arc::new(Provider::try_from(*rpc_url)?);
 
+            println!(
+                "ETH: {}",
+                format_units(provider.get_balance(wallet, None).await.unwrap(), 18)
+                    .unwrap()
+                    .separate_with_commas()
+            );
+
             let erc20_addresses: Vec<Address> = format_raw_addresses(erc20_addresses_raw).unwrap();
 
             for erc20_addr in erc20_addresses {
@@ -46,7 +53,7 @@ async fn main() -> eyre::Result<()> {
                 let decimals = erc20.decimals().call().await? as i32;
 
                 println!(
-                    "{}: {:?}",
+                    "{}: {}",
                     symbol,
                     format_units(balance, decimals)
                         .unwrap()
