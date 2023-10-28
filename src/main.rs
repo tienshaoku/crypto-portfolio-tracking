@@ -3,7 +3,7 @@ use ethers::{
     providers::{Middleware, Provider},
     types::{Address, U256},
     utils::format_units,
-    utils::Units::Ether
+    utils::Units::Ether,
 };
 use std::sync::Arc;
 use std::{collections::HashMap, error::Error};
@@ -35,11 +35,10 @@ async fn main() -> eyre::Result<()> {
             // dereference once for the pointer on rpc_token_map
             let provider = Arc::new(Provider::try_from(*rpc_url)?);
 
-            println!(
-                "ETH: {}",
-                format_units(provider.get_balance(wallet, None).await.unwrap(), Ether.as_num())
-                    .unwrap()
-                    .separate_with_commas()
+            print_erc20_balance(
+                "ETH",
+                provider.get_balance(wallet, None).await.unwrap(),
+                Ether.as_num(),
             );
 
             let erc20_addresses: Vec<Address> = format_raw_addresses(erc20_addresses_raw).unwrap();
@@ -49,17 +48,11 @@ async fn main() -> eyre::Result<()> {
                 // Initialize a new instance of ERC20
                 let erc20 = IERC20::new(erc20_addr, cloned_provider);
 
-                let symbol: String = erc20.symbol().call().await?;
+                let symbol = &erc20.symbol().call().await?[..];
                 let balance: U256 = erc20.balance_of(wallet).call().await?;
-                let decimals = erc20.decimals().call().await? as i32;
+                let decimals = erc20.decimals().call().await? as u32;
 
-                println!(
-                    "{}: {}",
-                    symbol,
-                    format_units(balance, decimals)
-                        .unwrap()
-                        .separate_with_commas()
-                );
+                print_erc20_balance(symbol, balance, decimals);
             }
         }
         println!();
@@ -74,4 +67,14 @@ fn format_raw_addresses(raw_addresses: &[&'static str]) -> Result<Vec<Address>, 
         addresses.push(addr.parse()?)
     }
     Ok(addresses)
+}
+
+fn print_erc20_balance(symbol: &str, balance: U256, decimals: u32) {
+    println!(
+        "{}: {}",
+        symbol,
+        format_units(balance, decimals)
+            .unwrap()
+            .separate_with_commas()
+    );
 }
