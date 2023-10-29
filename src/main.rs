@@ -5,7 +5,7 @@ use ethers::{
     utils::format_units,
     utils::Units::Ether,
 };
-use std::sync::Arc;
+use std::{sync::Arc, ops::Add};
 use std::{collections::HashMap, error::Error};
 use thousands::Separable;
 mod constant;
@@ -21,12 +21,14 @@ abigen!(
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
-    let wallets: Vec<Address> = format_raw_addresses(&constant::ADDRESS).unwrap();
+    // use String instead of &str s.t. won't have the issue of borrowing in for loop
+    let mut total_balance: HashMap<String,  U256> = HashMap::new();
 
     let mut rpc_token_map: HashMap<&str, &[&'static str]> = HashMap::new();
     rpc_token_map.insert(constant::ETH_RPC, &constant::ETH_ERC20);
     rpc_token_map.insert(constant::OP_RPC, &constant::OP_ERC20);
 
+    let wallets: Vec<Address> = format_raw_addresses(&constant::ADDRESS).unwrap();
     for wallet in wallets {
         println!("{:?}", wallet);
 
@@ -48,11 +50,14 @@ async fn main() -> eyre::Result<()> {
                 // Initialize a new instance of ERC20
                 let erc20 = IERC20::new(erc20_addr, cloned_provider);
 
-                let symbol = &erc20.symbol().call().await?[..];
+                let symbol: String = erc20.symbol().call().await?;
                 let balance: U256 = erc20.balance_of(wallet).call().await?;
                 let decimals = erc20.decimals().call().await? as u32;
 
-                print_erc20_balance(symbol, balance, decimals);
+                print_erc20_balance(&symbol, balance, decimals);
+
+                let current_balance = total_balance.entry(symbol).or_insert(U256::from(0));
+                *current_balance = current_balance.add(balance);
             }
         }
         println!();
