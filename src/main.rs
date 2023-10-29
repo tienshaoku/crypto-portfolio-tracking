@@ -5,8 +5,8 @@ use ethers::{
     utils::format_units,
     utils::Units::Ether,
 };
-use std::{sync::Arc, ops::Add};
 use std::{collections::HashMap, error::Error};
+use std::{ops::Add, sync::Arc};
 use thousands::Separable;
 mod constant;
 
@@ -19,10 +19,15 @@ abigen!(
     ]"#
 );
 
+struct TokenInfo {
+    decimals: u32,
+    balance: U256,
+}
+
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     // use String instead of &str s.t. won't have the issue of borrowing in for loop
-    let mut total_balance: HashMap<String,  U256> = HashMap::new();
+    let mut total_balance: HashMap<String, TokenInfo> = HashMap::new();
 
     let mut rpc_token_map: HashMap<&str, &[&'static str]> = HashMap::new();
     rpc_token_map.insert(constant::ETH_RPC, &constant::ETH_ERC20);
@@ -56,11 +61,18 @@ async fn main() -> eyre::Result<()> {
 
                 print_erc20_balance(&symbol, balance, decimals);
 
-                let current_balance = total_balance.entry(symbol).or_insert(U256::from(0));
-                *current_balance = current_balance.add(balance);
+                let token_info = total_balance.entry(symbol).or_insert(TokenInfo {
+                    decimals: decimals,
+                    balance: U256::from(0),
+                });
+                token_info.balance = token_info.balance.add(balance);
             }
         }
         println!();
+    }
+    
+    for (symbol, token_info) in total_balance {
+        print_erc20_balance(&symbol, token_info.balance, token_info.decimals);
     }
 
     Ok(())
