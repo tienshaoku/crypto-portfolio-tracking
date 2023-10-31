@@ -24,6 +24,15 @@ struct TokenInfo {
     balance: U256,
 }
 
+impl TokenInfo {
+    fn from(decimals: u32) -> TokenInfo {
+        TokenInfo {
+            decimals,
+            balance: U256::from(0),
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     // use String instead of &str s.t. won't have the issue of borrowing in for loop
@@ -63,7 +72,7 @@ async fn main() -> eyre::Result<()> {
             }
         }
     }
-    
+
     for (symbol, token_info) in total_balance {
         print_erc20_balance(&symbol, token_info.balance, token_info.decimals);
     }
@@ -85,10 +94,9 @@ fn update_erc20_balance(
     decimals: u32,
     balance: U256,
 ) {
-    let token_info = map.entry(symbol.to_string()).or_insert(TokenInfo {
-        decimals,
-        balance: U256::from(0),
-    });
+    let token_info = map
+        .entry(symbol.to_string())
+        .or_insert(TokenInfo::from(decimals));
     token_info.balance = token_info.balance.add(balance);
 
     print_erc20_balance(symbol, balance, decimals);
