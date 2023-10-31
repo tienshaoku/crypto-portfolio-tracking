@@ -38,14 +38,14 @@ async fn main() -> eyre::Result<()> {
         println!("{:?}", wallet);
 
         for (rpc_url, erc20_addresses_raw) in &rpc_token_map {
-            println!("rpc_url: {}", rpc_url);
             // dereference once for the pointer on rpc_token_map
             let provider = Arc::new(Provider::try_from(*rpc_url)?);
 
-            print_erc20_balance(
+            update_erc20_balance(
+                &mut total_balance,
                 "ETH",
-                provider.get_balance(wallet, None).await.unwrap(),
                 Ether.as_num(),
+                provider.get_balance(wallet, None).await.unwrap(),
             );
 
             let erc20_addresses: Vec<Address> = format_raw_addresses(erc20_addresses_raw).unwrap();
@@ -55,20 +55,13 @@ async fn main() -> eyre::Result<()> {
                 // Initialize a new instance of ERC20
                 let erc20 = IERC20::new(erc20_addr, cloned_provider);
 
-                let symbol: String = erc20.symbol().call().await?;
+                let symbol: &str = &erc20.symbol().call().await?[..];
                 let balance: U256 = erc20.balance_of(wallet).call().await?;
                 let decimals = erc20.decimals().call().await? as u32;
 
-                print_erc20_balance(&symbol, balance, decimals);
-
-                let token_info = total_balance.entry(symbol).or_insert(TokenInfo {
-                    decimals: decimals,
-                    balance: U256::from(0),
-                });
-                token_info.balance = token_info.balance.add(balance);
+                update_erc20_balance(&mut total_balance, symbol, decimals, balance);
             }
         }
-        println!();
     }
     
     for (symbol, token_info) in total_balance {
@@ -84,6 +77,21 @@ fn format_raw_addresses(raw_addresses: &[&'static str]) -> Result<Vec<Address>, 
         addresses.push(addr.parse()?)
     }
     Ok(addresses)
+}
+
+fn update_erc20_balance(
+    map: &mut HashMap<String, TokenInfo>,
+    symbol: &str,
+    decimals: u32,
+    balance: U256,
+) {
+    let token_info = map.entry(symbol.to_string()).or_insert(TokenInfo {
+        decimals,
+        balance: U256::from(0),
+    });
+    token_info.balance = token_info.balance.add(balance);
+
+    print_erc20_balance(symbol, balance, decimals);
 }
 
 fn print_erc20_balance(symbol: &str, balance: U256, decimals: u32) {
