@@ -50,7 +50,7 @@ async fn main() -> eyre::Result<()> {
             // dereference once for the pointer on rpc_token_map
             let provider = Arc::new(Provider::try_from(*rpc_url)?);
 
-            update_erc20_balance(
+            update_token_balance(
                 &mut total_balance,
                 "ETH",
                 Ether.as_num(),
@@ -68,13 +68,13 @@ async fn main() -> eyre::Result<()> {
                 let balance: U256 = erc20.balance_of(wallet).call().await?;
                 let decimals = erc20.decimals().call().await? as u32;
 
-                update_erc20_balance(&mut total_balance, symbol, decimals, balance);
+                update_token_balance(&mut total_balance, symbol, decimals, balance);
             }
         }
     }
 
     for (symbol, token_info) in total_balance {
-        print_erc20_balance(&symbol, token_info.balance, token_info.decimals);
+        print_token_balance(&symbol, token_info.decimals, token_info.balance);
     }
 
     Ok(())
@@ -88,7 +88,7 @@ fn format_raw_addresses(raw_addresses: &[&'static str]) -> Result<Vec<Address>, 
     Ok(addresses)
 }
 
-fn update_erc20_balance(
+fn update_token_balance(
     map: &mut HashMap<String, TokenInfo>,
     symbol: &str,
     decimals: u32,
@@ -99,10 +99,10 @@ fn update_erc20_balance(
         .or_insert(TokenInfo::from(decimals));
     token_info.balance = token_info.balance.add(balance);
 
-    print_erc20_balance(symbol, balance, decimals);
+    print_token_balance(symbol, decimals, balance);
 }
 
-fn print_erc20_balance(symbol: &str, balance: U256, decimals: u32) {
+fn print_token_balance(symbol: &str, decimals: u32, balance: U256) {
     println!(
         "{}: {}",
         symbol,
