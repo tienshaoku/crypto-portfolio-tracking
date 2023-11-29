@@ -35,7 +35,7 @@ impl TokenInfo {
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
-    // use String instead of &str s.t. won't have the issue of borrowing in for loop
+    // use String instead of &str to avoid the issue of borrowing in for loop
     let mut total_balance: HashMap<String, TokenInfo> = HashMap::new();
 
     let mut rpc_token_map: HashMap<&str, &[&'static str]> = HashMap::new();
@@ -94,12 +94,20 @@ fn update_token_balance(
     decimals: u32,
     balance: U256,
 ) {
-    let token_info = map
-        .entry(symbol.to_string())
-        .or_insert(TokenInfo::from(decimals));
-    token_info.balance = token_info.balance.add(balance);
+    if is_non_zero_balance(balance) {
+        let token_info = map
+            .entry(symbol.to_string())
+            .or_insert(TokenInfo::from(decimals));
+        token_info.balance = token_info.balance.add(balance);
 
-    print_token_balance(symbol, decimals, balance);
+        print_non_zero_token_balance(symbol, decimals, balance);
+    }
+}
+
+fn print_non_zero_token_balance(symbol: &str, decimals: u32, balance: U256) {
+    if is_non_zero_balance(balance) {
+        print_token_balance(symbol, decimals, balance);
+    }
 }
 
 fn print_token_balance(symbol: &str, decimals: u32, balance: U256) {
@@ -110,4 +118,8 @@ fn print_token_balance(symbol: &str, decimals: u32, balance: U256) {
             .unwrap()
             .separate_with_commas()
     );
+}
+
+fn is_non_zero_balance(balance: U256) -> bool {
+    balance != U256::zero()
 }
