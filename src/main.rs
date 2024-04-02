@@ -47,6 +47,7 @@ async fn main() -> eyre::Result<()> {
         println!("{:?}", wallet);
 
         for (rpc_url, erc20_addresses_raw) in &rpc_token_map {
+            println!("{}", rpc_url);
             // dereference once for the pointer on rpc_token_map
             let provider = Arc::new(Provider::try_from(*rpc_url)?);
 
@@ -70,8 +71,12 @@ async fn main() -> eyre::Result<()> {
 
                 update_token_balance(&mut total_balance, symbol, decimals, balance);
             }
+
+            println!();
         }
     }
+
+    println!("Total Balance:");
 
     for (symbol, token_info) in total_balance {
         print_token_balance(&symbol, token_info.decimals, token_info.balance);
