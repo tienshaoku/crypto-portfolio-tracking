@@ -2,13 +2,13 @@ use ethers::{
     prelude::abigen,
     providers::{Middleware, Provider},
     types::{Address, U256},
-    utils::format_units,
     utils::Units::Ether,
 };
+use std::sync::Arc;
 use std::{collections::HashMap, error::Error};
-use std::{ops::Add, sync::Arc};
-use thousands::Separable;
 mod constant;
+mod token;
+use token::{print_token_balance, update_token_balance, TokenInfo};
 
 abigen!(
     IERC20,
@@ -18,20 +18,6 @@ abigen!(
     function symbol() public view virtual returns (string)
     ]"#
 );
-
-struct TokenInfo {
-    decimals: u32,
-    balance: U256,
-}
-
-impl TokenInfo {
-    fn from(decimals: u32) -> TokenInfo {
-        TokenInfo {
-            decimals,
-            balance: U256::from(0),
-        }
-    }
-}
 
 pub async fn run() -> eyre::Result<()> {
     // use String instead of &str to avoid the issue of borrowing in for loop
@@ -78,7 +64,7 @@ pub async fn run() -> eyre::Result<()> {
     println!("Total Balance:");
 
     for (symbol, token_info) in total_balance {
-        print_token_balance(&symbol, token_info.decimals, token_info.balance);
+        print_token_balance(&symbol, token_info.decimals(), token_info.balance());
     }
 
     Ok(())
@@ -90,40 +76,4 @@ fn format_raw_addresses(raw_addresses: &[&'static str]) -> Result<Vec<Address>, 
         addresses.push(addr.parse()?)
     }
     Ok(addresses)
-}
-
-fn update_token_balance(
-    map: &mut HashMap<String, TokenInfo>,
-    symbol: &str,
-    decimals: u32,
-    balance: U256,
-) {
-    if is_non_zero_balance(balance) {
-        let token_info = map
-            .entry(symbol.to_string())
-            .or_insert(TokenInfo::from(decimals));
-        token_info.balance = token_info.balance.add(balance);
-
-        print_non_zero_token_balance(symbol, decimals, balance);
-    }
-}
-
-fn print_non_zero_token_balance(symbol: &str, decimals: u32, balance: U256) {
-    if is_non_zero_balance(balance) {
-        print_token_balance(symbol, decimals, balance);
-    }
-}
-
-fn print_token_balance(symbol: &str, decimals: u32, balance: U256) {
-    println!(
-        "{}: {}",
-        symbol,
-        format_units(balance, decimals)
-            .unwrap()
-            .separate_with_commas()
-    );
-}
-
-fn is_non_zero_balance(balance: U256) -> bool {
-    balance != U256::zero()
 }
