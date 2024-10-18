@@ -1,3 +1,6 @@
+mod constant;
+mod token;
+
 use ethers::{
     prelude::abigen,
     providers::{Middleware, Provider},
@@ -6,9 +9,7 @@ use ethers::{
 };
 use std::sync::Arc;
 use std::{collections::HashMap, error::Error};
-mod constant;
-mod token;
-use token::{print_token_balance, update_token_balance, TokenInfo};
+use token::{is_non_zero_balance, print_token_summary, TokenInfo};
 
 abigen!(
     IERC20,
@@ -20,8 +21,8 @@ abigen!(
 );
 
 pub async fn run() -> eyre::Result<()> {
-    // use String instead of &str to avoid the issue of borrowing in for loop
-    let mut total_balance: HashMap<String, TokenInfo> = HashMap::new();
+    // use String instead of &str to avoid borrowing in for-loop
+    let mut total_tokeninfo_map: HashMap<String, TokenInfo> = HashMap::new();
 
     let mut rpc_token_map: HashMap<&str, &[&'static str]> = HashMap::new();
     rpc_token_map.insert(constant::ETH_RPC, &constant::ETH_ERC20);
@@ -36,8 +37,8 @@ pub async fn run() -> eyre::Result<()> {
             // dereference once for the pointer on rpc_token_map
             let provider = Arc::new(Provider::try_from(*rpc_url)?);
 
-            update_token_balance(
-                &mut total_balance,
+            update_total_tokeninfo(
+                &mut total_tokeninfo_map,
                 "ETH",
                 Ether.as_num(),
                 provider.get_balance(wallet, None).await.unwrap(),
@@ -54,7 +55,7 @@ pub async fn run() -> eyre::Result<()> {
                 let balance: U256 = erc20.balance_of(wallet).call().await?;
                 let decimals = erc20.decimals().call().await? as u32;
 
-                update_token_balance(&mut total_balance, symbol, decimals, balance);
+                update_total_tokeninfo(&mut total_tokeninfo_map, symbol, decimals, balance);
             }
 
             println!();
@@ -63,11 +64,27 @@ pub async fn run() -> eyre::Result<()> {
 
     println!("Total Balance:");
 
-    for (symbol, token_info) in total_balance {
-        print_token_balance(&symbol, token_info.decimals(), token_info.balance());
+    for (symbol, token_info) in total_tokeninfo_map {
+        token_info.print_tokeninfo_with_symbol(&symbol);
     }
 
     Ok(())
+}
+
+fn update_total_tokeninfo(
+    map: &mut HashMap<String, TokenInfo>,
+    symbol: &str,
+    decimals: u32,
+    balance: U256,
+) {
+    if is_non_zero_balance(balance) {
+        let token_info: &mut TokenInfo = map
+            .entry(symbol.to_string())
+            .or_insert(TokenInfo::from(decimals));
+        token_info.update_token_balance(balance);
+
+        print_token_summary(symbol, decimals, balance);
+    }
 }
 
 fn format_raw_addresses(raw_addresses: &[&'static str]) -> Result<Vec<Address>, Box<dyn Error>> {
