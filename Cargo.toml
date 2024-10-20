@@ -10,3 +10,7 @@ ethers = "2.0.8"
 tokio = { version = "1", features = ["full"]}
 eyre = "0.6"
 thousands = "0.2.0"
+
+[dev-dependencies]
+rand = "0.8"
+ctor = "0.1"

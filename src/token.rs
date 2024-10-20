@@ -37,3 +37,35 @@ pub fn print_token_summary(symbol: &str, decimals: u32, balance: U256) {
 pub fn is_non_zero_balance(balance: U256) -> bool {
     balance != U256::zero()
 }
+
+#[cfg(test)]
+mod test_common {
+    pub use ctor::ctor;
+    pub use rand::Rng;
+}
+
+#[cfg(test)]
+mod is_non_zero_balance_test {
+    use super::*;
+    use test_common::*;
+
+    static mut RANDOM_U256: U256 = U256::zero();
+
+    #[ctor]
+    fn setup() {
+        let mut rng = rand::thread_rng();
+        unsafe { RANDOM_U256 = U256::from(rng.gen_range(0..u64::MAX)) }
+    }
+
+    #[test]
+    fn identifies_zero() {
+        assert_eq!(is_non_zero_balance(U256::zero()), false);
+    }
+
+    #[test]
+    fn identifies_non_zero() {
+        unsafe {
+            assert_eq!(is_non_zero_balance(RANDOM_U256), true);
+        }
+    }
+}
