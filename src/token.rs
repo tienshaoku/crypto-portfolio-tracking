@@ -25,23 +25,87 @@ impl TokenInfo {
 }
 
 pub fn print_token_summary(symbol: &str, decimals: u32, balance: U256) {
-    println!(
-        "{}: {}",
-        symbol,
-        format_units(balance, decimals)
-            .unwrap()
-            .separate_with_commas()
-    );
+    println!("{}", token_summary_string(symbol, decimals, balance));
 }
 
 pub fn is_non_zero_balance(balance: U256) -> bool {
     balance != U256::zero()
 }
 
+fn token_summary_string(symbol: &str, decimals: u32, balance: U256) -> String {
+    format!(
+        "{}: {}",
+        symbol,
+        format_units(balance, decimals)
+            .unwrap()
+            .separate_with_commas()
+    )
+}
+
 #[cfg(test)]
 mod test_common {
     pub use ctor::ctor;
     pub use rand::Rng;
+}
+
+#[cfg(test)]
+mod tokeninfo_test {
+    use super::*;
+
+    #[test]
+    fn from() {
+        let tokeninfo = TokenInfo::from(8);
+        assert_eq!(tokeninfo.decimals, 8);
+        assert_eq!(tokeninfo.balance, U256::zero());
+    }
+
+    #[test]
+    fn update() {
+        let mut tokeninfo = TokenInfo::from(8);
+
+        let balance = U256::from(100);
+        tokeninfo.update_token_balance(balance);
+
+        assert_eq!(tokeninfo.balance, balance);
+    }
+}
+
+#[cfg(test)]
+mod token_summary_string_test {
+    use super::*;
+
+    #[test]
+    fn no_less_than_1() {
+        let symbol = "ETH";
+        // 1 ETH
+        let balance = "1000000000000000000";
+        let decimals = 18;
+
+        assertion(symbol, balance, decimals);
+    }
+
+    #[test]
+    fn less_than_1() {
+        let symbol = "USDT";
+        // 0.1 USDT
+        let balance = "10000000";
+        let decimals = 8;
+
+        assertion(symbol, balance, decimals);
+    }
+
+    fn assertion(symbol: &str, balance: &str, decimals: u32) {
+        assert_eq!(
+            token_summary_string(symbol, decimals, U256::from_dec_str(&balance).unwrap()),
+            format!(
+                "{}: {:.2$}",
+                symbol,
+                // cast to f64 to avoid precision lost when value < 1
+                balance.parse::<u128>().unwrap() as f64 / 10_u128.pow(decimals) as f64,
+                decimals as usize
+            )
+        );
+    }
 }
 
 #[cfg(test)]
