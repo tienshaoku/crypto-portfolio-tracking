@@ -43,12 +43,6 @@ fn token_summary_string(symbol: &str, decimals: u32, balance: U256) -> String {
 }
 
 #[cfg(test)]
-mod test_common {
-    pub use ctor::ctor;
-    pub use rand::Rng;
-}
-
-#[cfg(test)]
 mod tokeninfo_test {
     use super::*;
 
@@ -111,15 +105,7 @@ mod token_summary_string_test {
 #[cfg(test)]
 mod is_non_zero_balance_test {
     use super::*;
-    use test_common::*;
-
-    static mut RANDOM_U256: U256 = U256::zero();
-
-    #[ctor]
-    fn setup() {
-        let mut rng = rand::thread_rng();
-        unsafe { RANDOM_U256 = U256::from(rng.gen_range(0..u64::MAX)) }
-    }
+    use rand::Rng;
 
     #[test]
     fn identifies_zero() {
@@ -128,8 +114,8 @@ mod is_non_zero_balance_test {
 
     #[test]
     fn identifies_non_zero() {
-        unsafe {
-            assert_eq!(is_non_zero_balance(RANDOM_U256), true);
-        }
+        let mut rng = rand::thread_rng();
+        let random_number = U256::from(rng.gen_range(0..u64::MAX));
+        assert_eq!(is_non_zero_balance(random_number), true);
     }
 }
