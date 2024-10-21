@@ -1,24 +1,16 @@
 mod constant;
+mod ierc20;
 mod token;
 
 use ethers::{
-    prelude::abigen,
     providers::{Middleware, Provider},
     types::{Address, U256},
     utils::Units::Ether,
 };
+use ierc20::IERC20;
 use std::sync::Arc;
 use std::{collections::HashMap, error::Error};
 use token::{is_non_zero_balance, print_token_summary, TokenInfo};
-
-abigen!(
-    IERC20,
-    r#"[
-    function balanceOf(address account) public view virtual returns (uint256)
-    function decimals() public view virtual returns (uint8)
-    function symbol() public view virtual returns (string)
-    ]"#
-);
 
 pub async fn run() -> eyre::Result<()> {
     // use String instead of &str to avoid borrowing in for-loop
