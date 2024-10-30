@@ -27,7 +27,7 @@ impl TokenInfo {
         self.balance = self.balance.add(balance);
     }
 
-    pub fn print_tokeninfo_with_symbol(&self, symbol: &str) {
+    pub fn print_token_info_with_symbol(&self, symbol: &str) {
         print_token_summary(symbol, self.decimals, self.balance);
     }
 }
@@ -51,24 +51,24 @@ fn token_summary_string(symbol: &str, decimals: u32, balance: U256) -> String {
 }
 
 #[cfg(test)]
-mod tokeninfo_test {
+mod token_info_test {
     use super::*;
 
     #[test]
     fn from() {
-        let tokeninfo = TokenInfo::from(8);
-        assert_eq!(tokeninfo.decimals, 8);
-        assert_eq!(tokeninfo.balance, U256::zero());
+        let token_info = TokenInfo::from(8);
+        assert_eq!(token_info.decimals, 8);
+        assert_eq!(token_info.balance, U256::zero());
     }
 
     #[test]
     fn update() {
-        let mut tokeninfo = TokenInfo::from(8);
+        let mut token_info = TokenInfo::from(8);
 
         let balance = U256::from(100);
-        tokeninfo.update_token_balance(balance);
+        token_info.update_token_balance(balance);
 
-        assert_eq!(tokeninfo.balance, balance);
+        assert_eq!(token_info.balance, balance);
     }
 }
 

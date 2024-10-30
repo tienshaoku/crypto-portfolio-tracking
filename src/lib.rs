@@ -3,20 +3,22 @@ mod ierc20;
 mod token;
 mod total_balance;
 
+use std::sync::Arc;
+use std::{collections::HashMap, error::Error};
+
 use ethers::{
     providers::{Middleware, Provider},
     types::{Address, U256},
     utils::Units::Ether,
 };
+
 use ierc20::IERC20;
-use std::sync::Arc;
-use std::{collections::HashMap, error::Error};
 use token::{is_non_zero_balance, print_token_summary, TokenInfo};
 use total_balance::total_balance;
 
 pub async fn run() -> eyre::Result<()> {
     // use String instead of &str to avoid borrowing in for-loop
-    let mut total_tokeninfo_map: HashMap<String, TokenInfo> = HashMap::new();
+    let mut total_token_info_map: HashMap<String, TokenInfo> = HashMap::new();
 
     let mut rpc_token_map: HashMap<&str, &[&'static str]> = HashMap::new();
     rpc_token_map.insert(constant::ETH_RPC, &constant::ETH_ERC20);
@@ -31,8 +33,8 @@ pub async fn run() -> eyre::Result<()> {
             // dereference once for the pointer on rpc_token_map
             let provider = Arc::new(Provider::try_from(*rpc_url)?);
 
-            update_total_tokeninfo(
-                &mut total_tokeninfo_map,
+            update_total_token_info(
+                &mut total_token_info_map,
                 "ETH",
                 Ether.as_num(),
                 provider.get_balance(wallet, None).await.unwrap(),
@@ -49,7 +51,7 @@ pub async fn run() -> eyre::Result<()> {
                 let balance: U256 = erc20.balance_of(wallet).call().await?;
                 let decimals = erc20.decimals().call().await? as u32;
 
-                update_total_tokeninfo(&mut total_tokeninfo_map, symbol, decimals, balance);
+                update_total_token_info(&mut total_token_info_map, symbol, decimals, balance);
             }
 
             println!();
@@ -58,17 +60,17 @@ pub async fn run() -> eyre::Result<()> {
 
     println!("Summary:");
 
-    for (symbol, token_info) in &total_tokeninfo_map {
-        token_info.print_tokeninfo_with_symbol(symbol);
+    for (symbol, token_info) in &total_token_info_map {
+        token_info.print_token_info_with_symbol(symbol);
     }
 
-    let sum = total_balance(&total_tokeninfo_map).await?;
+    let sum = total_balance(&total_token_info_map).await?;
     println!("\nTotal Balance in USD: {:.2}", sum);
 
     Ok(())
 }
 
-fn update_total_tokeninfo(
+fn update_total_token_info(
     map: &mut HashMap<String, TokenInfo>,
     symbol: &str,
     decimals: u32,
