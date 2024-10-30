@@ -15,6 +15,14 @@ impl TokenInfo {
         }
     }
 
+    pub fn balance(&self) -> U256 {
+        self.balance
+    }
+
+    pub fn decimals(&self) -> u32 {
+        self.decimals
+    }
+
     pub fn update_token_balance(&mut self, balance: U256) {
         self.balance = self.balance.add(balance);
     }

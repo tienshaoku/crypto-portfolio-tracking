@@ -1,6 +1,7 @@
 mod constant;
 mod ierc20;
 mod token;
+mod total_balance;
 
 use ethers::{
     providers::{Middleware, Provider},
@@ -11,6 +12,7 @@ use ierc20::IERC20;
 use std::sync::Arc;
 use std::{collections::HashMap, error::Error};
 use token::{is_non_zero_balance, print_token_summary, TokenInfo};
+use total_balance::total_balance;
 
 pub async fn run() -> eyre::Result<()> {
     // use String instead of &str to avoid borrowing in for-loop
@@ -54,11 +56,14 @@ pub async fn run() -> eyre::Result<()> {
         }
     }
 
-    println!("Total Balance:");
+    println!("Summary:");
 
-    for (symbol, token_info) in total_tokeninfo_map {
-        token_info.print_tokeninfo_with_symbol(&symbol);
+    for (symbol, token_info) in &total_tokeninfo_map {
+        token_info.print_tokeninfo_with_symbol(symbol);
     }
+
+    let sum = total_balance(&total_tokeninfo_map).await?;
+    println!("\nTotal Balance in USD: {:.2}", sum);
 
     Ok(())
 }
