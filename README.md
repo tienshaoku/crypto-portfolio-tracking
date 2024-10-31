@@ -12,6 +12,11 @@ This simple CLI tool lets you monitor your portfolio locally 👌
 
 3. `cargo run` 🥳
 
+## Feature
+
+- Total # of tokens owned by all addresses
+- Total USD value of your portfolio
+
 ## Snippet
 
 ![](snippet.png)

@@ -1,3 +1,6 @@
+// declaring the path to avoid switching errors incurred when 
+// switching between constant.rs and constant_example.rs
+#[path = "constant.rs"]
 mod constant;
 mod ierc20;
 mod token;
