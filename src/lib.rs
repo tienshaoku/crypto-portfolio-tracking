@@ -1,9 +1,9 @@
 // declaring the path to avoid errors when switching between constant.rs and constant_example.rs
+mod coingecko_service;
 #[path = "constant.rs"]
 mod constant;
 mod ierc20;
 mod token;
-mod coingecko_service;
 
 use std::sync::Arc;
 use std::{collections::HashMap, error::Error};
@@ -14,9 +14,9 @@ use ethers::{
     utils::Units::Ether,
 };
 
+use coingecko_service::total_balance;
 use ierc20::IERC20;
 use token::{is_non_zero_balance, print_token_summary, TokenInfo};
-use coingecko_service::total_balance;
 
 pub async fn run() -> eyre::Result<()> {
     // use String instead of &str to avoid borrowing in for-loop
