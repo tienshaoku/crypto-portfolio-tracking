@@ -8,7 +8,7 @@ if ! cargo check; then
     exit 1
 fi
 
-echo "Running cargo check..."
+echo "Running cargo clippy..."
 if ! cargo clippy; then
     echo "❌ cargo clippy failed"
     exit 1
