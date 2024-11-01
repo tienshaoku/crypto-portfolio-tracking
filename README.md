@@ -12,6 +12,10 @@ This simple CLI tool lets you monitor your portfolio locally 👌
 
 3. `cargo run` 🥳
 
+### Development Setup
+
+- Configure git hooks by `git config core.hooksPath .hooks`
+
 ## Feature
 
 - Total # of tokens owned by all addresses

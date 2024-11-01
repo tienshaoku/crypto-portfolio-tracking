@@ -11,14 +11,8 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with: # input params for this action
           toolchain: stable
-          components: rustfmt, clippy
+          components: rustfmt
           override: true
-
-      - name: Check compilation
-        run: cargo check # Run this first - fails fast if code won't compile
 
       - name: Check formatting
         run: cargo fmt -- --check
-
-      - name: Check clippy
-        run: cargo clippy # Run this after - catches deeper issues
