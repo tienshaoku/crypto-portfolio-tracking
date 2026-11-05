@@ -1,0 +1,9 @@
+[advisories]
+ignore = [
+    # crypto-bigint 0.5 via alloy-signer/k256; timing side-channel only matters when handling secret keys, and this app never signs
+    { id = "RUSTSEC-2026-0387", reason = "pulled in by alloy-signer; no private keys are used" },
+    # paste is a compile-time macro crate used by alloy-primitives/syn-solidity
+    { id = "RUSTSEC-2024-0436", reason = "unmaintained, no known vulnerability; upstream alloy dependency" },
+    # pin-utils via wasmtimer (alloy wasm support)
+    { id = "RUSTSEC-2026-0441", reason = "unmaintained, no known vulnerability; upstream alloy dependency" },
+]

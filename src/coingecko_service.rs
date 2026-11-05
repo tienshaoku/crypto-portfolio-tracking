@@ -17,7 +17,7 @@ pub async fn total_balance(total_token_info_map: &HashMap<String, TokenInfo>) ->
         let token_id = token_map[&symbol.to_lowercase().as_str()];
         let price = response[token_id][TO_CURRENCY].as_f64().unwrap();
         sum += price
-            * (token_info.balance().as_u128() as f64 / 10_u64.pow(token_info.decimals()) as f64);
+            * (token_info.balance().to::<u128>() as f64 / 10_u64.pow(token_info.decimals()) as f64);
     }
 
     Ok(sum)

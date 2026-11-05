@@ -5,18 +5,18 @@ mod constant;
 mod ierc20;
 mod token;
 
-use std::sync::Arc;
 use std::{collections::HashMap, error::Error};
 
-use ethers::{
-    providers::{Middleware, Provider},
-    types::{Address, U256},
-    utils::Units::Ether,
+use alloy::{
+    primitives::{Address, U256},
+    providers::{Provider, ProviderBuilder},
 };
 
 use coingecko_service::total_balance;
 use ierc20::IERC20;
 use token::{is_non_zero_balance, print_token_summary, TokenInfo};
+
+const ETH_DECIMALS: u32 = 18;
 
 pub async fn run() -> eyre::Result<()> {
     // use String instead of &str to avoid borrowing in for-loop
@@ -33,27 +33,26 @@ pub async fn run() -> eyre::Result<()> {
         for (rpc_url, erc20_addresses_raw) in &rpc_token_map {
             println!("{}", rpc_url);
             // dereference once for the pointer on rpc_token_map
-            let provider = Arc::new(Provider::try_from(*rpc_url)?);
+            let provider = ProviderBuilder::new().connect_http(rpc_url.parse()?);
 
             update_total_token_info(
                 &mut total_token_info_map,
                 "ETH",
-                Ether.as_num(),
-                provider.get_balance(wallet, None).await.unwrap(),
+                ETH_DECIMALS,
+                provider.get_balance(wallet).await?,
             );
 
             let erc20_addresses: Vec<Address> = format_raw_addresses(erc20_addresses_raw).unwrap();
 
             for erc20_addr in erc20_addresses {
-                let cloned_provider = provider.clone();
                 // Initialize a new instance of ERC20
-                let erc20 = IERC20::new(erc20_addr, cloned_provider);
+                let erc20 = IERC20::new(erc20_addr, &provider);
 
-                let symbol: &str = &erc20.symbol().call().await?[..];
-                let balance: U256 = erc20.balance_of(wallet).call().await?;
+                let symbol: String = erc20.symbol().call().await?;
+                let balance: U256 = erc20.balanceOf(wallet).call().await?;
                 let decimals = erc20.decimals().call().await? as u32;
 
-                update_total_token_info(&mut total_token_info_map, symbol, decimals, balance);
+                update_total_token_info(&mut total_token_info_map, &symbol, decimals, balance);
             }
 
             println!();

@@ -1,4 +1,4 @@
-use ethers::{types::U256, utils::format_units};
+use alloy::primitives::{utils::format_units, U256};
 use std::ops::Add;
 use thousands::Separable;
 
@@ -37,14 +37,14 @@ pub fn print_token_summary(symbol: &str, decimals: u32, balance: U256) {
 }
 
 pub fn is_non_zero_balance(balance: U256) -> bool {
-    balance != U256::zero()
+    balance != U256::ZERO
 }
 
 fn token_summary_string(symbol: &str, decimals: u32, balance: U256) -> String {
     format!(
         "{}: {}",
         symbol,
-        format_units(balance, decimals)
+        format_units(balance, decimals as u8)
             .unwrap()
             .separate_with_commas()
     )
@@ -58,7 +58,7 @@ mod token_info_test {
     fn from() {
         let token_info = TokenInfo::from(8);
         assert_eq!(token_info.decimals, 8);
-        assert_eq!(token_info.balance, U256::zero());
+        assert_eq!(token_info.balance, U256::ZERO);
     }
 
     #[test]
@@ -98,7 +98,7 @@ mod token_summary_string_test {
 
     fn assertion(symbol: &str, balance: &str, decimals: u32) {
         assert_eq!(
-            token_summary_string(symbol, decimals, U256::from_dec_str(&balance).unwrap()),
+            token_summary_string(symbol, decimals, balance.parse::<U256>().unwrap()),
             format!(
                 "{}: {:.2$}",
                 symbol,
@@ -117,7 +117,7 @@ mod is_non_zero_balance_test {
 
     #[test]
     fn identifies_zero() {
-        assert_eq!(is_non_zero_balance(U256::zero()), false);
+        assert_eq!(is_non_zero_balance(U256::ZERO), false);
     }
 
     #[test]

@@ -1,12 +1,10 @@
-use ethers::prelude::abigen;
+use alloy::sol;
 
-pub use IERC20;
-
-abigen!(
-    IERC20,
-    r#"[
-    function balanceOf(address account) public view virtual returns (uint256)
-    function decimals() public view virtual returns (uint8)
-    function symbol() public view virtual returns (string)
-    ]"#
-);
+sol! {
+    #[sol(rpc)]
+    interface IERC20 {
+        function balanceOf(address account) external view returns (uint256);
+        function decimals() external view returns (uint8);
+        function symbol() external view returns (string);
+    }
+}
